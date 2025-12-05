@@ -3,3 +3,6 @@ __pycache__
 .env
 .venv
 fieldflux.db
+node_modules
+npm-debug.log*
+.DS_Store

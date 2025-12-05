@@ -1,4 +1,5 @@
 <!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -71,5 +72,82 @@
     </template>
 
     <script src="app.js"></script>
+    <title>FieldFlux Auth</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: grid;
+        gap: 1rem;
+        max-width: 800px;
+        margin: auto;
+        padding: 2rem;
+      }
+      form {
+        border: 1px solid #e0e0e0;
+        padding: 1rem;
+        border-radius: 6px;
+      }
+      label {
+        display: block;
+        margin-top: 0.5rem;
+      }
+      input {
+        width: 100%;
+        padding: 0.5rem;
+        margin-top: 0.25rem;
+      }
+      button {
+        margin-top: 0.75rem;
+        padding: 0.5rem 1rem;
+      }
+      #status {
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>FieldFlux Authentication</h1>
+    <section>
+      <h2>Signup</h2>
+      <form id="signup-form">
+        <label>Email <input id="signup-email" type="email" required /></label>
+        <label>Password <input id="signup-password" type="password" minlength="8" required /></label>
+        <button type="submit">Create account</button>
+        <div id="signup-status"></div>
+      </form>
+    </section>
+
+    <section>
+      <h2>Login</h2>
+      <form id="login-form">
+        <label>Email <input id="login-email" type="email" required /></label>
+        <label>Password <input id="login-password" type="password" required /></label>
+        <button type="submit">Login</button>
+        <button type="button" id="logout">Logout</button>
+        <div id="login-status"></div>
+      </form>
+    </section>
+
+    <section>
+      <h2>Password reset</h2>
+      <form id="reset-request-form">
+        <label>Account email <input id="reset-email" type="email" required /></label>
+        <button type="submit">Send reset link</button>
+      </form>
+      <form id="reset-confirm-form">
+        <label>Reset token <input id="reset-token" required /></label>
+        <label>New password <input id="reset-new-password" type="password" minlength="8" required /></label>
+        <button type="submit">Update password</button>
+      </form>
+      <div id="reset-status"></div>
+    </section>
+
+    <section>
+      <h2>Session</h2>
+      <p id="profile">No active session</p>
+      <p id="tokens">No tokens</p>
+    </section>
+
+    <script src="./app.js"></script>
   </body>
 </html>
