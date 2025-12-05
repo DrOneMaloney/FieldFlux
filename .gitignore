@@ -1,4 +1,3 @@
-__pycache__/
-.env
-*.db
-*.sqlite
+node_modules
+npm-debug.log*
+.DS_Store
