@@ -62,6 +62,23 @@ def test_list_permissions(app):
     assert instance.list_fields(viewer) == ([] if record is None else [record])
 
 
+def test_read_operations_return_copies(app):
+    instance, admin, _, viewer = app
+    created = instance.create_field(admin, name="Prairie", crop="Corn", acres="120")
+
+    fetched = instance.get_field(viewer, created.id)
+    fetched.name = "Tampered"
+    fetched.attributes["acres"] = "999"
+
+    original = instance.get_field(admin, created.id)
+    assert original.name == "Prairie"
+    assert original.attributes["acres"] == "120"
+
+    listed = instance.list_fields(viewer)[0]
+    listed.attributes["acres"] = "0"
+    assert instance.fields[created.id].attributes["acres"] == "120"
+
+
 def test_healthcheck_tracks_env_flags(app):
     instance, *_ = app
     health = instance.healthcheck()
