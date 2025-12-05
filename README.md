@@ -81,12 +81,11 @@ Use environment variables (or your secret manager of choice) to supply credentia
 
 - `DATABASE_URL` — Postgres connection string
 - `REDIS_URL` — Redis instance for caching/queues
-- `MAPS_API_KEY` / `MAP_DOMAIN` — map provider API key and staging domain
 - `ANALYTICS_WRITE_KEY` — telemetry destination (e.g., Segment)
 - `ERROR_MONITOR_DSN` — error monitoring endpoint (e.g., Sentry)
 - `SECRET_KEY`, `ENVIRONMENT` — application bootstrap settings
 
-These values are surfaced through the application healthcheck (`FieldFluxApp.healthcheck`) to ensure required keys are present.
+These values are surfaced through the application healthcheck (`FieldFluxApp.healthcheck`) to ensure required keys are present. The mapper now uses free, open-source OpenStreetMap/Esri imagery tiles and no longer needs map API credentials.
 
 ## Development setup
 1. Create and activate a Python 3.11+ virtual environment.
