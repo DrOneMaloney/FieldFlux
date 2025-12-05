@@ -1,208 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>FieldFlux Timeline</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 1rem; }
-    .row { display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
-    label { display: block; font-size: 0.9rem; margin-bottom: 0.2rem; }
-    input, select, button, textarea { padding: 0.4rem; }
-    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-    th, td { border: 1px solid #ddd; padding: 0.5rem; }
-    th { background: #f0f0f0; }
-    .card { border: 1px solid #ddd; padding: 0.75rem; border-radius: 4px; }
-  </style>
-</head>
-<body>
-  <h1>Field Timeline & History</h1>
-  <div class="row">
-    <div class="card">
-      <h3>Create Field</h3>
-      <label>Name <input id="field-name" /></label>
-      <label>Location <input id="field-location" /></label>
-      <label>Role <select id="field-role"><option>admin</option><option>manager</option></select></label>
-      <button onclick="createField()">Create</button>
-    </div>
-    <div class="card">
-      <h3>Add Application Event</h3>
-      <label>Field <select id="event-field"></select></label>
-      <label>Date <input type="date" id="event-date" /></label>
-      <label>Product <input id="event-product" /></label>
-      <label>Rate <input type="number" step="0.01" id="event-rate" /></label>
-      <label>Operator <input id="event-operator" /></label>
-      <label>Notes <textarea id="event-notes"></textarea></label>
-      <label>Role <select id="event-role"><option>admin</option><option>manager</option></select></label>
-      <button onclick="addEvent()">Add Event</button>
-    </div>
-  </div>
-
-  <div class="card">
-    <h3>Timeline & Filters</h3>
-    <div class="row">
-      <label>Field <select id="filter-field"></select></label>
-      <label>Start Date <input type="date" id="filter-start" /></label>
-      <label>End Date <input type="date" id="filter-end" /></label>
-      <label>Product <input id="filter-product" /></label>
-      <label>Operator <input id="filter-operator" /></label>
-      <button onclick="loadEvents()">Apply Filters</button>
-      <button onclick="exportCSV()">Export CSV</button>
-      <button onclick="exportExcel()">Export Excel</button>
-    </div>
-    <table id="events-table">
-      <thead><tr><th>Date</th><th>Product</th><th>Rate</th><th>Operator</th><th>Notes</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </div>
-
-  <div class="card">
-    <h3>Season Summaries</h3>
-    <table id="summary-table">
-      <thead><tr><th>Season</th><th>Product</th><th>Total Rate</th><th>Events</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </div>
-
-  <script>
-    const apiBase = "http://localhost:8000";
-    let cachedEvents = [];
-
-    async function fetchJSON(url, options = {}) {
-      const response = await fetch(url, options);
-      if (!response.ok) {
-        const detail = await response.text();
-        throw new Error(detail || response.statusText);
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FieldFlux Auth</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: grid;
+        gap: 1rem;
+        max-width: 800px;
+        margin: auto;
+        padding: 2rem;
       }
-      return response.json();
-    }
-
-    async function refreshFields() {
-      const fields = await fetchJSON(`${apiBase}/fields`);
-      const selects = [document.getElementById('event-field'), document.getElementById('filter-field')];
-      selects.forEach(sel => {
-        sel.innerHTML = '';
-        fields.forEach(f => {
-          const option = document.createElement('option');
-          option.value = f.id;
-          option.textContent = `${f.name}${f.location ? ' - ' + f.location : ''}`;
-          sel.appendChild(option);
-        });
-      });
-      if (fields.length) {
-        loadEvents();
+      form {
+        border: 1px solid #e0e0e0;
+        padding: 1rem;
+        border-radius: 6px;
       }
-    }
+      label {
+        display: block;
+        margin-top: 0.5rem;
+      }
+      input {
+        width: 100%;
+        padding: 0.5rem;
+        margin-top: 0.25rem;
+      }
+      button {
+        margin-top: 0.75rem;
+        padding: 0.5rem 1rem;
+      }
+      #status {
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>FieldFlux Authentication</h1>
+    <section>
+      <h2>Signup</h2>
+      <form id="signup-form">
+        <label>Email <input id="signup-email" type="email" required /></label>
+        <label>Password <input id="signup-password" type="password" minlength="8" required /></label>
+        <button type="submit">Create account</button>
+        <div id="signup-status"></div>
+      </form>
+    </section>
 
-    async function createField() {
-      const name = document.getElementById('field-name').value;
-      const location = document.getElementById('field-location').value;
-      const role = document.getElementById('field-role').value;
-      if (!name) return alert('Name is required');
-      await fetchJSON(`${apiBase}/fields`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Role': role },
-        body: JSON.stringify({ name, location })
-      });
-      document.getElementById('field-name').value = '';
-      document.getElementById('field-location').value = '';
-      refreshFields();
-    }
+    <section>
+      <h2>Login</h2>
+      <form id="login-form">
+        <label>Email <input id="login-email" type="email" required /></label>
+        <label>Password <input id="login-password" type="password" required /></label>
+        <button type="submit">Login</button>
+        <button type="button" id="logout">Logout</button>
+        <div id="login-status"></div>
+      </form>
+    </section>
 
-    async function addEvent() {
-      const fieldId = document.getElementById('event-field').value;
-      const role = document.getElementById('event-role').value;
-      const payload = {
-        date: document.getElementById('event-date').value,
-        product: document.getElementById('event-product').value,
-        rate: parseFloat(document.getElementById('event-rate').value || '0'),
-        operator: document.getElementById('event-operator').value,
-        notes: document.getElementById('event-notes').value
-      };
-      await fetchJSON(`${apiBase}/fields/${fieldId}/events`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Role': role },
-        body: JSON.stringify(payload)
-      });
-      loadEvents();
-    }
+    <section>
+      <h2>Password reset</h2>
+      <form id="reset-request-form">
+        <label>Account email <input id="reset-email" type="email" required /></label>
+        <button type="submit">Send reset link</button>
+      </form>
+      <form id="reset-confirm-form">
+        <label>Reset token <input id="reset-token" required /></label>
+        <label>New password <input id="reset-new-password" type="password" minlength="8" required /></label>
+        <button type="submit">Update password</button>
+      </form>
+      <div id="reset-status"></div>
+    </section>
 
-    function buildQuery(params) {
-      const query = new URLSearchParams();
-      Object.entries(params).forEach(([key, value]) => {
-        if (value) query.append(key, value);
-      });
-      const qs = query.toString();
-      return qs ? `?${qs}` : '';
-    }
+    <section>
+      <h2>Session</h2>
+      <p id="profile">No active session</p>
+      <p id="tokens">No tokens</p>
+    </section>
 
-    async function loadEvents() {
-      const fieldId = document.getElementById('filter-field').value;
-      if (!fieldId) return;
-      const params = {
-        start_date: document.getElementById('filter-start').value,
-        end_date: document.getElementById('filter-end').value,
-        product: document.getElementById('filter-product').value,
-        operator: document.getElementById('filter-operator').value,
-      };
-      const events = await fetchJSON(`${apiBase}/fields/${fieldId}/events${buildQuery(params)}`);
-      cachedEvents = events;
-      renderEvents();
-      loadSummaries(fieldId);
-    }
-
-    function renderEvents() {
-      const tbody = document.querySelector('#events-table tbody');
-      tbody.innerHTML = '';
-      cachedEvents.forEach(ev => {
-        const row = document.createElement('tr');
-        row.innerHTML = `<td>${ev.date}</td><td>${ev.product}</td><td>${ev.rate}</td><td>${ev.operator}</td><td>${ev.notes || ''}</td>`;
-        tbody.appendChild(row);
-      });
-    }
-
-    async function loadSummaries(fieldId) {
-      const summaries = await fetchJSON(`${apiBase}/fields/${fieldId}/events/summary`);
-      const tbody = document.querySelector('#summary-table tbody');
-      tbody.innerHTML = '';
-      summaries.forEach(s => {
-        const row = document.createElement('tr');
-        row.innerHTML = `<td>${s.season}</td><td>${s.product}</td><td>${s.total_rate}</td><td>${s.event_count}</td>`;
-        tbody.appendChild(row);
-      });
-    }
-
-    function exportCSV() {
-      if (!cachedEvents.length) return alert('No events to export');
-      const headers = ['date','product','rate','operator','notes'];
-      const lines = [headers.join(',')];
-      cachedEvents.forEach(ev => {
-        const row = headers.map(h => `"${(ev[h] ?? '').toString().replace('"', '""')}"`).join(',');
-        lines.push(row);
-      });
-      downloadFile(lines.join('\n'), 'text/csv', 'application_events.csv');
-    }
-
-    function exportExcel() {
-      if (!cachedEvents.length) return alert('No events to export');
-      const headers = ['Date','Product','Rate','Operator','Notes'];
-      const lines = [headers.join('\t')];
-      cachedEvents.forEach(ev => {
-        lines.push([ev.date, ev.product, ev.rate, ev.operator, ev.notes || ''].join('\t'));
-      });
-      downloadFile(lines.join('\n'), 'application/vnd.ms-excel', 'application_events.xls');
-    }
-
-    function downloadFile(content, type, filename) {
-      const blob = new Blob([content], { type });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    refreshFields();
-  </script>
-</body>
+    <script src="./app.js"></script>
+  </body>
 </html>
