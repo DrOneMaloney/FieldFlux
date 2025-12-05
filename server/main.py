@@ -1,12 +1,19 @@
 from datetime import timedelta
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
-from . import auth
-from .auth import (
+if __package__ is None or __package__ == "":
+    import sys
+
+    sys.path.append(str(Path(__file__).resolve().parent.parent))
+    __package__ = "server"
+
+from server import auth
+from server.auth import (
     consume_email_token,
     create_access_token,
     create_email_token,
