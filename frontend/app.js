@@ -1,4 +1,14 @@
-const API_BASE = "http://localhost:8000";
+const API_BASE = (() => {
+  if (typeof window !== "undefined") {
+    const { hostname, protocol } = window.location;
+    if (hostname.endsWith("app.github.dev")) {
+      // Map the current preview host to the forwarded backend port in Codespaces
+      const apiHost = hostname.replace(/-\d+\.app\.github\.dev$/, "-8000.app.github.dev");
+      return `${protocol}//${apiHost}`;
+    }
+  }
+  return "http://localhost:8000";
+})();
 
 const store = (() => {
   let state = {
