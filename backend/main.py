@@ -2,7 +2,7 @@ from datetime import date
 from typing import Annotated, Optional
 
 from fastapi import Depends, FastAPI, Header, HTTPException, status
-from sqlmodel import Session, select, col
+from sqlmodel import Session, col, select
 
 from .database import create_db_and_tables, get_session
 from .models import (
@@ -34,8 +34,14 @@ def require_role(allowed_roles: list[str]):
     return verifier
 
 
-@app.post("/fields", response_model=FieldRead, dependencies=[Depends(require_role(["admin", "manager"]))])
-def create_field(field: FieldCreate, session: Session = Depends(get_session)) -> Field:
+@app.post(
+    "/fields",
+    response_model=FieldRead,
+    dependencies=[Depends(require_role(["admin", "manager"]))],
+)
+def create_field(
+    field: FieldCreate, session: Annotated[Session, Depends(get_session)]
+) -> Field:
     new_field = Field.from_orm(field)
     session.add(new_field)
     session.commit()
@@ -44,7 +50,7 @@ def create_field(field: FieldCreate, session: Session = Depends(get_session)) ->
 
 
 @app.get("/fields", response_model=list[FieldRead])
-def list_fields(session: Session = Depends(get_session)) -> list[Field]:
+def list_fields(session: Annotated[Session, Depends(get_session)]) -> list[Field]:
     return session.exec(select(Field)).all()
 
 
@@ -53,7 +59,11 @@ def list_fields(session: Session = Depends(get_session)) -> list[Field]:
     response_model=ApplicationEventRead,
     dependencies=[Depends(require_role(["admin", "manager"]))],
 )
-def add_event(field_id: int, event: ApplicationEventCreate, session: Session = Depends(get_session)) -> ApplicationEvent:
+def add_event(
+    field_id: int,
+    event: ApplicationEventCreate,
+    session: Annotated[Session, Depends(get_session)],
+) -> ApplicationEvent:
     field = session.get(Field, field_id)
     if not field:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Field not found")
@@ -70,11 +80,11 @@ def add_event(field_id: int, event: ApplicationEventCreate, session: Session = D
 @app.get("/fields/{field_id}/events", response_model=list[ApplicationEventRead])
 def list_events(
     field_id: int,
+    session: Annotated[Session, Depends(get_session)],
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
     product: Optional[str] = None,
     operator: Optional[str] = None,
-    session: Session = Depends(get_session),
 ) -> list[ApplicationEvent]:
     field = session.get(Field, field_id)
     if not field:
@@ -95,7 +105,9 @@ def list_events(
 
 
 @app.get("/fields/{field_id}/events/summary", response_model=list[ApplicationEventSummary])
-def summarize_events(field_id: int, session: Session = Depends(get_session)) -> list[ApplicationEventSummary]:
+def summarize_events(
+    field_id: int, session: Annotated[Session, Depends(get_session)]
+) -> list[ApplicationEventSummary]:
     field = session.get(Field, field_id)
     if not field:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Field not found")
@@ -126,7 +138,7 @@ def summarize_events(field_id: int, session: Session = Depends(get_session)) -> 
 
 
 @app.get("/reports/field/{field_id}")
-def field_report(field_id: int, session: Session = Depends(get_session)):
+def field_report(field_id: int, session: Annotated[Session, Depends(get_session)]):
     events = list_events(field_id=field_id, session=session)
     summaries = summarize_events(field_id=field_id, session=session)
     return {"events": events, "summaries": summaries}

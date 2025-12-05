@@ -1,9 +1,10 @@
 from typing import Dict, List, Optional
-from shapely.geometry import shape, Polygon, mapping
-from shapely.ops import transform
-from pyproj import Transformer
 
-from data.storage import load_db, save_db, generate_id
+from pyproj import Transformer
+from shapely.geometry import Polygon, mapping, shape
+from shapely.ops import transform
+
+from data.storage import generate_id, load_db, save_db
 from db.models.farmer import get_farmer
 from db.models.field_history import add_history_entry
 
@@ -41,8 +42,12 @@ def _validate_overlap(farmer_id: str, new_geom: Polygon, field_id: Optional[str]
         if field_id and field["id"] == field_id:
             continue
         existing = shape(field["geometry"])
-        if existing.overlaps(new_geom) or (existing.intersects(new_geom) and not existing.touches(new_geom)):
-            raise ValueError(f"Polygon overlaps with existing field '{field.get('name', 'Unnamed Field')}'.")
+        if existing.overlaps(new_geom) or (
+            existing.intersects(new_geom) and not existing.touches(new_geom)
+        ):
+            raise ValueError(
+                f"Polygon overlaps with existing field '{field.get('name', 'Unnamed Field')}'."
+            )
 
 
 def list_fields_for_farmer(farmer_id: str) -> List[Dict]:
@@ -51,7 +56,10 @@ def list_fields_for_farmer(farmer_id: str) -> List[Dict]:
 
 
 def get_field(farmer_id: str, field_id: str) -> Optional[Dict]:
-    return next((field for field in list_fields_for_farmer(farmer_id) if field["id"] == field_id), None)
+    return next(
+        (field for field in list_fields_for_farmer(farmer_id) if field["id"] == field_id),
+        None,
+    )
 
 
 def create_field(farmer_id: str, payload: Dict) -> Dict:
@@ -96,7 +104,11 @@ def delete_field(farmer_id: str, field_id: str) -> bool:
     data = load_db()
     fields = data.get("fields", [])
     before = len(fields)
-    data["fields"] = [f for f in fields if not (f.get("id") == field_id and f.get("farmerId") == farmer_id)]
+    data["fields"] = [
+        f
+        for f in fields
+        if not (f.get("id") == field_id and f.get("farmerId") == farmer_id)
+    ]
     removed = len(data["fields"]) < before
     if removed:
         save_db(data)
