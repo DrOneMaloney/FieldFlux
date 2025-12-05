@@ -1,3 +1,8 @@
+__pycache__
+*.pyc
+.env
+.venv
+fieldflux.db
 node_modules
 npm-debug.log*
 .DS_Store
