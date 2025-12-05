@@ -124,12 +124,12 @@ class FieldFluxApp:
             self.error_monitor.capture_error("read_missing_field", {"field_id": field_id})
             raise KeyError("Field not found")
         self.logger.capture("field_viewed", {"field_id": field_id, "user": user.username})
-        return self.fields[field_id]
+        return self._copy_record(self.fields[field_id])
 
     def list_fields(self, user: User) -> List[FieldRecord]:
         self._require_permission(user, "read")
         self.logger.capture("fields_listed", {"user": user.username, "count": len(self.fields)})
-        return list(self.fields.values())
+        return [self._copy_record(record) for record in self.fields.values()]
 
     def seed(self, fields: List[FieldRecord]) -> None:
         for record in fields:
@@ -142,3 +142,13 @@ class FieldFluxApp:
             "map_provider": self.map_provider,
             "analytics_key_configured": bool(self.analytics_key),
         }
+
+    @staticmethod
+    def _copy_record(record: FieldRecord) -> FieldRecord:
+        return FieldRecord(
+            id=record.id,
+            name=record.name,
+            crop=record.crop,
+            owner=record.owner,
+            attributes=dict(record.attributes),
+        )
