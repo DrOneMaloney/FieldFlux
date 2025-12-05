@@ -4,3 +4,11 @@ __pycache__/
 *.pyd
 .env
 venv/
+__pycache__
+*.pyc
+.env
+.venv
+fieldflux.db
+node_modules
+npm-debug.log*
+.DS_Store

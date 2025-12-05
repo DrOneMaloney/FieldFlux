@@ -58,4 +58,44 @@
   <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
   <script src="./main.js"></script>
 </body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FieldFlux Access Control Demo</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>FieldFlux Access Control</h1>
+      <div class="user-selector">
+        <label for="user-role">Impersonate role:</label>
+        <select id="user-role">
+          <option value="admin">Admin</option>
+          <option value="agronomist" selected>Agronomist</option>
+          <option value="billing">Billing</option>
+        </select>
+        <label for="user-id">User ID:</label>
+        <input id="user-id" value="demo-user" />
+      </div>
+    </header>
+    <main>
+      <section class="panel">
+        <h2>Farmers</h2>
+        <ul id="farmers"></ul>
+      </section>
+      <section class="panel">
+        <h2>Fields</h2>
+        <div id="fields"></div>
+      </section>
+      <section class="panel">
+        <h2>Invoices</h2>
+        <div id="invoices"></div>
+      </section>
+      <section class="panel">
+        <h2>Activity Log</h2>
+        <div id="audit-log"></div>
+      </section>
+    </main>
+    <script src="/app.js" type="module"></script>
+  </body>
 </html>
