@@ -26,9 +26,9 @@ from server.auth import (
     verification_tokens,
     verify_password,
 )
-from server.database import Base, engine, get_db
-from server.models import User
-from server.schemas import (
+from .database import Base, engine, get_db
+from .models import User
+from .schemas import (
     EmailRequest,
     PasswordResetConfirm,
     TokenPayload,
