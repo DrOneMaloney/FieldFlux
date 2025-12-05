@@ -3,16 +3,15 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Annotated
 
+from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
+
 if __package__ is None or __package__ == "":
-    # Allow running "python main.py" from the server directory without setting PYTHONPATH
     import sys
 
     sys.path.append(str(Path(__file__).resolve().parent.parent))
     __package__ = "server"
-
-from fastapi import Depends, FastAPI, HTTPException, Request, status
-from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
 
 from server import auth
 from server.auth import (
@@ -205,17 +204,3 @@ def health():
         "status": "ok",
         "rate_limit_remaining": {k: len(v) for k, v in rate_limiter.requests.items()},
     }
-
-
-if __name__ == "__main__":
-    import sys
-    import uvicorn
-
-    if len(sys.argv) > 1 and sys.argv[1] in {"-h", "--help"}:
-        print("Run the FieldFlux auth service")
-        print("Usage: python main.py [--host HOST] [--port PORT]")
-        sys.exit(0)
-
-    host = os.getenv("HOST", "0.0.0.0")
-    port = int(os.getenv("PORT", 8000))
-    uvicorn.run("server.main:app", host=host, port=port)
