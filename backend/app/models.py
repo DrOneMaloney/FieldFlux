@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import enum
-from datetime import datetime, date
+from datetime import date, datetime
+
 from sqlalchemy import (
     Column,
     Date,
@@ -70,10 +71,16 @@ class Invoice(Base):
     farmer = relationship("Farmer", back_populates="invoices")
     field = relationship("Field", back_populates="invoices")
     line_items = relationship(
-        "LineItem", back_populates="invoice", cascade="all, delete-orphan", order_by="LineItem.position"
+        "LineItem",
+        back_populates="invoice",
+        cascade="all, delete-orphan",
+        order_by="LineItem.position",
     )
     payments = relationship(
-        "PaymentRecord", back_populates="invoice", cascade="all, delete-orphan", order_by="PaymentRecord.date"
+        "PaymentRecord",
+        back_populates="invoice",
+        cascade="all, delete-orphan",
+        order_by="PaymentRecord.date",
     )
 
     def outstanding_balance(self) -> float:

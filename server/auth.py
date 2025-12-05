@@ -1,7 +1,7 @@
 import os
 import time
 from datetime import datetime, timedelta
-from typing import Dict, Optional
+from typing import Annotated, Dict, Optional
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
@@ -67,14 +67,20 @@ def create_refresh_token(user_id: int):
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
+def get_current_user(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    db: Annotated[Session, Depends(get_db)],
+) -> User:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
         if user_id is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-    except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
+    except JWTError as err:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+        ) from err
 
     user = db.query(User).filter(User.id == int(user_id)).first()
     if user is None:
@@ -87,8 +93,12 @@ def enforce_rate_limit(request: Request):
     rate_limiter.check(client_ip)
 
 
-def create_email_token(email: str, store: Dict[str, tuple[str, float]], ttl_seconds: int = 3600) -> str:
-    token = create_access_token({"sub": email, "purpose": "email"}, timedelta(seconds=ttl_seconds))
+def create_email_token(
+    email: str, store: Dict[str, tuple[str, float]], ttl_seconds: int = 3600
+) -> str:
+    token = create_access_token(
+        {"sub": email, "purpose": "email"}, timedelta(seconds=ttl_seconds)
+    )
     store[token] = (email, time.time() + ttl_seconds)
     return token
 
@@ -96,7 +106,10 @@ def create_email_token(email: str, store: Dict[str, tuple[str, float]], ttl_seco
 def consume_email_token(token: str, store: Dict[str, tuple[str, float]]) -> str:
     record = store.get(token)
     if not record:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired token")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired token",
+        )
     email, expires_at = record
     if time.time() > expires_at:
         store.pop(token, None)
