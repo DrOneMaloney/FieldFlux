@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Dict
-from data.storage import load_db, save_db, generate_id
+
+from data.storage import generate_id, load_db, save_db
 
 
 def add_history_entry(field_id: str, action: str, payload: Dict) -> Dict:

@@ -1,13 +1,14 @@
 from flask import Flask, jsonify, request, send_from_directory
-from db.models.farmer import list_farmers, create_farmer, get_farmer, update_farmer, delete_farmer
-from db.models.field import (
-    list_fields_for_farmer,
-    create_field,
-    get_field,
-    update_field,
-    delete_field,
-)
+
 from data.storage import load_db
+from db.models.farmer import create_farmer, delete_farmer, get_farmer, list_farmers, update_farmer
+from db.models.field import (
+    create_field,
+    delete_field,
+    get_field,
+    list_fields_for_farmer,
+    update_field,
+)
 
 app = Flask(__name__, static_folder="public", static_url_path="")
 
@@ -114,7 +115,14 @@ def api_farmer_summary(farmer_id):
         return jsonify({"error": "Farmer not found"}), 404
     fields = list_fields_for_farmer(farmer_id)
     total_acres = round(sum(f.get("acres", 0) for f in fields), 4)
-    return jsonify({"farmerId": farmer_id, "farmer": farmer, "totalAcres": total_acres, "fieldCount": len(fields)})
+    return jsonify(
+        {
+            "farmerId": farmer_id,
+            "farmer": farmer,
+            "totalAcres": total_acres,
+            "fieldCount": len(fields),
+        }
+    )
 
 
 @app.route("/api/summary", methods=["GET"])
@@ -125,7 +133,14 @@ def api_summary():
     for farmer in farmers:
         fields = [f for f in data.get("fields", []) if f.get("farmerId") == farmer["id"]]
         acres = sum(f.get("acres", 0) for f in fields)
-        response.append({"farmerId": farmer["id"], "farmer": farmer, "totalAcres": round(acres, 4), "fieldCount": len(fields)})
+        response.append(
+            {
+                "farmerId": farmer["id"],
+                "farmer": farmer,
+                "totalAcres": round(acres, 4),
+                "fieldCount": len(fields),
+            }
+        )
     return jsonify(response)
 
 
