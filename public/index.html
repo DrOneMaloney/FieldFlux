@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FieldFlux Mapper</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header>
+    <div>
+      <h2>FieldFlux Mapper</h2>
+      <div style="opacity:0.9">Draw and manage grower fields with acreage tracking.</div>
+    </div>
+    <div class="summary-box">
+      <span>Total Acres</span>
+      <span class="value" id="total-acres">0</span>
+    </div>
+  </header>
+  <div class="container">
+    <div class="controls">
+      <div class="panel">
+        <h3>Select Farmer</h3>
+        <select id="farmer-select"></select>
+        <div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
+          <input type="text" id="new-farmer-name" placeholder="New farmer name" />
+          <button id="add-farmer">Add</button>
+        </div>
+        <div class="status" id="farmer-status"></div>
+      </div>
+      <div class="panel">
+        <h3>Field Details</h3>
+        <label for="field-name">Name</label>
+        <input type="text" id="field-name" placeholder="Field name" />
+        <label for="field-notes" style="margin-top:8px; display:block;">Notes</label>
+        <textarea id="field-notes" rows="3" placeholder="Irrigation, soil, etc"></textarea>
+        <div class="status" id="field-status"></div>
+      </div>
+      <div class="panel">
+        <h3>Farmer Summary</h3>
+        <table class="table">
+          <thead>
+            <tr><th>Farmer</th><th>Fields</th><th>Acres</th></tr>
+          </thead>
+          <tbody id="summary-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="map"></div>
+    <div class="panel" style="margin-top:12px;">
+      <h3>Fields for farmer</h3>
+      <ul id="field-list"></ul>
+    </div>
+  </div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+  <script src="./main.js"></script>
+</body>
+</html>
