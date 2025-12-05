@@ -1,5 +1,6 @@
 from typing import Dict, List, Optional
-from data.storage import load_db, save_db, generate_id
+
+from data.storage import generate_id, load_db, save_db
 
 
 def list_farmers() -> List[Dict]:
