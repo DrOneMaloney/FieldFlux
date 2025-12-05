@@ -44,8 +44,8 @@ class FieldFluxApp:
         error_monitor: Optional[ErrorMonitor] = None,
     ) -> None:
         self.db_url = os.getenv("DATABASE_URL")
-        self.map_api_key = os.getenv("MAPS_API_KEY")
         self.analytics_key = os.getenv("ANALYTICS_WRITE_KEY")
+        self.map_provider = "openstreetmap"
         self.users: Dict[str, User] = {}
         self.fields: Dict[str, FieldRecord] = {}
         self.logger = logger or EventLogger()
@@ -139,6 +139,6 @@ class FieldFluxApp:
     def healthcheck(self) -> Dict[str, Optional[str]]:
         return {
             "db_url_configured": bool(self.db_url),
-            "map_api_key_configured": bool(self.map_api_key),
+            "map_provider": self.map_provider,
             "analytics_key_configured": bool(self.analytics_key),
         }

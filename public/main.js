@@ -14,12 +14,15 @@ const streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
   maxZoom: 19,
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
-const satellite = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-  subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-  maxZoom: 19,
-  attribution: '&copy; Google'
-});
-L.control.layers({ 'Streets': streets, 'Satellite': satellite }).addTo(map);
+const imagery = L.tileLayer(
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  {
+    maxZoom: 19,
+    attribution:
+      'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+  },
+);
+L.control.layers({ Streets: streets, Imagery: imagery }).addTo(map);
 
 const drawnItems = new L.FeatureGroup();
 map.addLayer(drawnItems);

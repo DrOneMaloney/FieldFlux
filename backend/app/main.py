@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date
 from io import BytesIO
-from typing import List
+from typing import Annotated, List
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -32,12 +32,18 @@ def _calculate_totals(invoice: models.Invoice):
     invoice.subtotal = round(subtotal, 2)
     invoice.total = round(subtotal + tax_amount - discount_amount, 2)
 
-    if invoice.status == models.InvoiceStatus.sent and invoice.due_date and invoice.due_date < date.today():
+    if (
+        invoice.status == models.InvoiceStatus.sent
+        and invoice.due_date
+        and invoice.due_date < date.today()
+    ):
         invoice.status = models.InvoiceStatus.overdue
 
 
 @app.post("/farmers", response_model=schemas.FarmerOut)
-def create_farmer(farmer: schemas.FarmerCreate, db: Session = Depends(get_db)):
+def create_farmer(
+    farmer: schemas.FarmerCreate, db: Annotated[Session, Depends(get_db)]
+):
     farmer_obj = models.Farmer(**farmer.dict())
     db.add(farmer_obj)
     db.commit()
@@ -46,7 +52,7 @@ def create_farmer(farmer: schemas.FarmerCreate, db: Session = Depends(get_db)):
 
 
 @app.post("/fields", response_model=schemas.FieldOut)
-def create_field(field: schemas.FieldCreate, db: Session = Depends(get_db)):
+def create_field(field: schemas.FieldCreate, db: Annotated[Session, Depends(get_db)]):
     if not db.get(models.Farmer, field.farmer_id):
         raise HTTPException(status_code=404, detail="Farmer not found")
     field_obj = models.Field(**field.dict())
@@ -73,7 +79,9 @@ def _hydrate_billable_line_items(field_applications: List[str], start_position: 
 
 
 @app.post("/invoices", response_model=schemas.InvoiceOut)
-def create_invoice(invoice: schemas.InvoiceCreate, db: Session = Depends(get_db)):
+def create_invoice(
+    invoice: schemas.InvoiceCreate, db: Annotated[Session, Depends(get_db)]
+):
     farmer = db.get(models.Farmer, invoice.farmer_id)
     if not farmer:
         raise HTTPException(status_code=404, detail="Farmer not found")
@@ -104,7 +112,9 @@ def create_invoice(invoice: schemas.InvoiceCreate, db: Session = Depends(get_db)
         )
 
     if invoice.field_applications:
-        auto_items = _hydrate_billable_line_items(invoice.field_applications, start_position=len(invoice_obj.line_items))
+        auto_items = _hydrate_billable_line_items(
+            invoice.field_applications, start_position=len(invoice_obj.line_items)
+        )
         invoice_obj.line_items.extend(auto_items)
 
     _calculate_totals(invoice_obj)
@@ -115,7 +125,7 @@ def create_invoice(invoice: schemas.InvoiceCreate, db: Session = Depends(get_db)
 
 
 @app.get("/invoices", response_model=List[schemas.InvoiceOut])
-def list_invoices(db: Session = Depends(get_db)):
+def list_invoices(db: Annotated[Session, Depends(get_db)]):
     invoices = db.query(models.Invoice).all()
     for inv in invoices:
         _calculate_totals(inv)
@@ -123,7 +133,7 @@ def list_invoices(db: Session = Depends(get_db)):
 
 
 @app.get("/invoices/{invoice_id}", response_model=schemas.InvoiceOut)
-def get_invoice(invoice_id: int, db: Session = Depends(get_db)):
+def get_invoice(invoice_id: int, db: Annotated[Session, Depends(get_db)]):
     invoice = db.get(models.Invoice, invoice_id)
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
@@ -132,7 +142,11 @@ def get_invoice(invoice_id: int, db: Session = Depends(get_db)):
 
 
 @app.patch("/invoices/{invoice_id}/status", response_model=schemas.InvoiceOut)
-def update_invoice_status(invoice_id: int, status_update: schemas.InvoiceStatusUpdate, db: Session = Depends(get_db)):
+def update_invoice_status(
+    invoice_id: int,
+    status_update: schemas.InvoiceStatusUpdate,
+    db: Annotated[Session, Depends(get_db)],
+):
     invoice = db.get(models.Invoice, invoice_id)
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
@@ -144,7 +158,11 @@ def update_invoice_status(invoice_id: int, status_update: schemas.InvoiceStatusU
 
 
 @app.post("/invoices/{invoice_id}/payments", response_model=schemas.InvoiceOut)
-def record_payment(invoice_id: int, payment: schemas.PaymentCreate, db: Session = Depends(get_db)):
+def record_payment(
+    invoice_id: int,
+    payment: schemas.PaymentCreate,
+    db: Annotated[Session, Depends(get_db)],
+):
     invoice = db.get(models.Invoice, invoice_id)
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
@@ -171,7 +189,7 @@ def record_payment(invoice_id: int, payment: schemas.PaymentCreate, db: Session 
 
 
 @app.get("/farmers/{farmer_id}/balance")
-def farmer_balance(farmer_id: int, db: Session = Depends(get_db)):
+def farmer_balance(farmer_id: int, db: Annotated[Session, Depends(get_db)]):
     farmer = db.get(models.Farmer, farmer_id)
     if not farmer:
         raise HTTPException(status_code=404, detail="Farmer not found")
@@ -206,7 +224,10 @@ def _invoice_html(invoice: models.Invoice) -> str:
                 {items_html}
             </table>
             <p>Subtotal: ${invoice.subtotal:.2f}</p>
-            <p>Tax Rate: {invoice.tax_rate * 100:.1f}% | Discount: {invoice.discount_rate * 100:.1f}%</p>
+            <p>
+                Tax Rate: {invoice.tax_rate * 100:.1f}% | Discount:
+                {invoice.discount_rate * 100:.1f}%
+            </p>
             <p><strong>Amount Due: ${invoice.total:.2f}</strong></p>
             <p>Payments:</p>
             <ul>{payments_html or '<li>No payments yet</li>'}</ul>
@@ -217,7 +238,7 @@ def _invoice_html(invoice: models.Invoice) -> str:
 
 
 @app.get("/invoices/{invoice_id}/html", response_class=HTMLResponse)
-def invoice_html(invoice_id: int, db: Session = Depends(get_db)):
+def invoice_html(invoice_id: int, db: Annotated[Session, Depends(get_db)]):
     invoice = db.get(models.Invoice, invoice_id)
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
@@ -225,7 +246,7 @@ def invoice_html(invoice_id: int, db: Session = Depends(get_db)):
 
 
 @app.get("/invoices/{invoice_id}/pdf")
-def invoice_pdf(invoice_id: int, db: Session = Depends(get_db)):
+def invoice_pdf(invoice_id: int, db: Annotated[Session, Depends(get_db)]):
     invoice = db.get(models.Invoice, invoice_id)
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
@@ -244,7 +265,12 @@ def invoice_pdf(invoice_id: int, db: Session = Depends(get_db)):
         pdf.cell(0, 8, f"- {item.description} ({item.quantity} @ ${item.unit_price:.2f})", ln=True)
     pdf.ln(3)
     pdf.cell(0, 8, f"Subtotal: ${invoice.subtotal:.2f}", ln=True)
-    pdf.cell(0, 8, f"Tax: {invoice.tax_rate*100:.1f}% | Discount: {invoice.discount_rate*100:.1f}%", ln=True)
+    pdf.cell(
+        0,
+        8,
+        f"Tax: {invoice.tax_rate*100:.1f}% | Discount: {invoice.discount_rate*100:.1f}%",
+        ln=True,
+    )
     pdf.cell(0, 8, f"Total Due: ${invoice.total:.2f}", ln=True)
 
     buffer = BytesIO(pdf.output(dest="S").encode("latin-1"))

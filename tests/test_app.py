@@ -8,7 +8,6 @@ from fieldflux.app import FieldFluxApp, PermissionError
 @pytest.fixture
 def app():
     os.environ["DATABASE_URL"] = "postgresql://example"
-    os.environ["MAPS_API_KEY"] = "fake-map-key"
     os.environ["ANALYTICS_WRITE_KEY"] = "segment-key"
     instance = FieldFluxApp()
     admin = instance.register_user("alice", "admin")
@@ -66,7 +65,7 @@ def test_healthcheck_tracks_env_flags(app):
     instance, *_ = app
     health = instance.healthcheck()
     assert health["db_url_configured"] is True
-    assert health["map_api_key_configured"] is True
+    assert health["map_provider"] == "openstreetmap"
     assert health["analytics_key_configured"] is True
 
 

@@ -3,7 +3,8 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, Field as PydanticField, validator
+from pydantic import BaseModel, validator
+from pydantic import Field as PydanticField
 
 from .models import InvoiceStatus
 
